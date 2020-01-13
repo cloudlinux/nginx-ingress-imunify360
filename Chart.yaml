@@ -1,0 +1,16 @@
+apiVersion: v1
+name: nginx-ingress
+version: 1.26.1-im360
+appVersion: 0.26.1
+home: https://github.com/cloudlinux/nginx-ingress-imunify360
+description: An nginx Ingress controller that uses ConfigMap to store the nginx configuration, with im360 rules. Based on kubernetes ingress inginx 
+keywords:
+  - ingress
+  - nginx
+  - im360
+sources:
+  - https://github.com/kubernetes/ingress-nginx
+maintainers:
+  - name: CloudLinux 
+engine: gotpl
+kubeVersion: ">=1.10.0-0"
