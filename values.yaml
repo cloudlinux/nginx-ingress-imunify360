@@ -543,21 +543,32 @@ udp: {}
 cloudlinux:
   initname: im360config
   fixrights: im360rights
+  updater: im360upd
   im360rules:
     enabled: true
+    jsonpanel: "imunify360-modsec3-full-nginx-plesk"
   dockerconfig:
     enabled: false
     image:
       pullPolicy: IfNotPresent
       repository: 192.168.246.57:5000/config-nginx-ingress
       tag: "v20200108"
+  im360updater:
+    configMapName: im360updater
+    mountdir: "/var/updater"
+    updatescript: "im360updater.sh"
   httpconfig:
     url: "https://files.imunify360.com/static/modsec/v2/imunify360-modsec3-full-nginx.zip"
+    # https://github.com/stedolan/jq/wiki/Installation
+    jqurl: "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64"
+    jsonurl: "https://files.imunify360.com/static/modsec/v2/description.json"
   paths:
     mountdir:  "/etc/nginx/cloudlinux"
     rulesdir:  "/etc/nginx/cloudlinux/im360rules"
     # rulesfile can be stored $mountdir or on any persistent volume
     rulesfile: "/tmp/cloudlinux.zip"
+    jqfile: "/bin/jq"
+    jsonfile: "/tmp/cloudall.json"
   busybox:
     image:
       pullPolicy: IfNotPresent

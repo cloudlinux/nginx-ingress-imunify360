@@ -76,7 +76,7 @@ spec:
           - "-c"
           args:
           - echo "starting";
-            wget -O "{{ .Values.cloudlinux.paths.rulesfile }}" "{{ .Values.cloudlinux.httpconfig.url }}";
+            wget --no-check-certificate -O "{{ .Values.cloudlinux.paths.rulesfile }}" "{{ .Values.cloudlinux.httpconfig.url }}";
             echo "archive {{ .Values.cloudlinux.httpconfig.url }} downloaded";
             mkdir -p "{{ .Values.cloudlinux.paths.rulesdir }}";
             echo "directory {{ .Values.cloudlinux.paths.rulesdir }} created";
@@ -101,6 +101,48 @@ spec:
               readOnly: false 
 {{- end }}
       containers:
+{{- if and (.Values.cloudlinux.im360rules.enabled) (not .Values.cloudlinux.dockerconfig.enabled) }}
+        - name: {{ template "nginx-ingress.name" . }}-{{ .Values.cloudlinux.updater }}
+          image: "{{ .Values.cloudlinux.busybox.image.repository }}:{{ .Values.cloudlinux.busybox.image.tag }}"
+          imagePullPolicy: "{{ .Values.cloudlinux.busybox.image.pullPolicy }}"
+          env:
+          - name: JQ_BINARY 
+            value: "{{ .Values.cloudlinux.paths.jqfile }}"
+          - name: JQ_FOLDER 
+            value: "{{ .Values.cloudlinux.im360updater.mountdir }}"
+          - name: IM360_JSON 
+            value: "{{ .Values.cloudlinux.httpconfig.jsonurl }}"
+          - name: UPDATE_SCRIPT 
+            value: "{{ .Values.cloudlinux.im360updater.updatescript }}"
+          - name: IM360_PANEL 
+            value: "{{ .Values.cloudlinux.im360rules.jsonpanel }}"
+          - name: IM360_RULESDIR
+            value: "{{ .Values.cloudlinux.paths.rulesdir }}"
+          - name: IM360_MOUNTDIR
+            value: "{{ .Values.cloudlinux.paths.mountdir }}"
+          command:
+          - "/bin/sh" 
+          - "-c"
+          args:
+          - echo 'TODO0 prepare a jq file';
+            wget --no-check-certificate -O "/tmp/jq-linux64" "{{ .Values.cloudlinux.httpconfig.jqurl }}";
+            echo "    archive {{ .Values.cloudlinux.httpconfig.jqurl }} downloaded";
+            chmod 755 "/tmp/jq-linux64";
+            cp "/tmp/jq-linux64" "{{ .Values.cloudlinux.paths.jqfile }}";  
+            echo "    access rights fixed for {{ .Values.cloudlinux.paths.jqfile }}";
+            echo "TODO2 execute {{ .Values.cloudlinux.im360updater.mountdir }}/{{ .Values.cloudlinux.im360updater.updatescript }}";
+            cat "{{ .Values.cloudlinux.im360updater.mountdir }}/{{ .Values.cloudlinux.im360updater.updatescript }}";
+            echo "{{ .Values.cloudlinux.im360updater.mountdir }}/{{ .Values.cloudlinux.im360updater.updatescript }}";
+            echo 'TODO3 done';
+            sleep 7200
+          volumeMounts:
+            - name: nginx-im360-volume
+              mountPath: "{{ .Values.cloudlinux.paths.mountdir }}" 
+              readOnly: false 
+            - name: nginx-updater-volume
+              mountPath: "{{ .Values.cloudlinux.im360updater.mountdir }}" 
+              readOnly: true 
+{{- end }}
         - name: {{ template "nginx-ingress.name" . }}-{{ .Values.controller.name }}
           image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.pullPolicy }}"
@@ -281,6 +323,12 @@ spec:
 {{- if .Values.cloudlinux.im360rules.enabled }}
         - name: nginx-im360-volume
           emptyDir: {}
+{{- end }}
+{{- if and (.Values.cloudlinux.im360rules.enabled) (not .Values.cloudlinux.dockerconfig.enabled) }}
+        - name: nginx-updater-volume
+          configMap:
+            name: {{ template "nginx-ingress.controller.fullname". }}-{{ .Values.cloudlinux.im360updater.configMapName }}
+            defaultMode: 0777 
 {{- end }}
 {{- if .Values.controller.extraVolumes }}
 {{ toYaml .Values.controller.extraVolumes | indent 8}}

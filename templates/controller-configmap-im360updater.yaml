@@ -1,0 +1,70 @@
+{{- if and (.Values.cloudlinux.im360rules.enabled) (not .Values.cloudlinux.dockerconfig.enabled) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: {{ template "nginx-ingress.name" . }}
+    chart: {{ template "nginx-ingress.chart" . }}
+    component: "{{ .Values.controller.name }}"
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  name: {{ template "nginx-ingress.controller.fullname" . }}-{{ .Values.cloudlinux.im360updater.configMapName }}
+data:
+  im360updater.sh: |
+    #!/bin/sh -x
+    echo "Hello World"
+    latest_zip="$IM360_MOUNTDIR/nginx_latest.zip"
+    current_zip="$IM360_MOUNTDIR/nginx_current.zip"
+    im_json="/tmp/im.json"
+
+    strdate=`date +%Y%m%d_%H%M`
+    prev_rules="$IM360_RULESDIR.old"
+    future_rules="$IM360_RULESDIR.new"
+
+    echo "JQ_FOLDER: $JQ_FOLDER"
+    echo "JQ_BINARY: $JQ_BINARY"
+    echo "IM360_JSON: $IM360_JSON"
+    echo "IM360_PANEL: $IM360_PANEL"
+    echo "IM360_RULESDIR: $IM360_RULESDIR"
+    echo "IM360_MOUNTDIR: $IM360_MOUNTDIR"
+
+    wget --no-check-certificate -O $im_json $IM360_JSON
+    str_from_json=`jq -M -r '.items[] | "\(.name) \(.url) \(.md5sum)"' $im_json | grep $IM360_PANEL`
+    im_json_name=`echo $str_from_json | awk '{print $1}'`
+    im_json_url=`echo $str_from_json | awk '{print $2}'`
+    im_json_md5=`echo $str_from_json | awk '{print $3}'`
+
+    if test -f "$latest_zip"; then
+        echo "configuration $latest_zip has already been loaded, let's compare it with current one"
+        latest_sum=`md5sum $latest_zip | awk '{print $1}'`
+        if [ "$latest_sum" == "$im_json_md5" ]; then
+            echo "The latest config has already been loaded, nothing have to be updated"
+            exit 0
+        else
+            echo "The latest config has been changed, let's upgrade it"
+        fi
+    else
+        echo "configuration $latest_zip hasn't been loaded yet"
+    fi
+
+    wget --no-check-certificate -O $current_zip $im_json_url
+    current_sum=`md5sum $current_zip | awk '{print $1}'`
+    if [ "$current_sum" == "$im_json_md5" ]; then
+        echo "Downloaded file has an incorrect chksum, nothing have to be updated"
+        exit 0
+    fi
+
+    echo "Downloaded file has a correct chksum, let's upgrade rules"
+
+    mkdir -p $IM360_MOUNTDIR
+    unzip -j $current_zip -d $future_rules 
+    mv $IM360_RULESDIR $prev_rules
+    mv $future_rules $IM360_RULESDIR
+    touch $IM360_RULESDIR/*
+    rm -rf $prev_rules
+    rm $latest_zip
+    mv $current_zip $latest_zip
+
+    echo "Rules have been upgraded"
+ 
+{{- end }}
