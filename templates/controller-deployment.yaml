@@ -142,6 +142,23 @@ spec:
             - name: nginx-updater-volume
               mountPath: "{{ .Values.cloudlinux.im360updater.mountdir }}" 
               readOnly: true 
+        - name: {{ template "nginx-ingress.name" . }}-{{ .Values.cloudlinux.parser }}
+          image: "{{ .Values.cloudlinux.python.image.repository }}:{{ .Values.cloudlinux.python.image.tag }}"
+          imagePullPolicy: "{{ .Values.cloudlinux.python.image.pullPolicy }}"
+          command:
+          - "/bin/sh" 
+          - "-c"
+          args:
+          - echo 'TODO0 prepare parser';
+            tar -C "{{ .Values.cloudlinux.paths.mountdir }}" -zvxf "{{ .Values.cloudlinux.im360parser.mountdir }}/{{ .Values.cloudlinux.im360parser.gzipfile }}";
+            sleep 7200
+          volumeMounts:
+            - name: nginx-im360-volume
+              mountPath: "{{ .Values.cloudlinux.paths.mountdir }}" 
+              readOnly: false 
+            - name: im360-parser-volume
+              mountPath: "{{ .Values.cloudlinux.im360parser.mountdir }}" 
+              readOnly: true 
 {{- end }}
         - name: {{ template "nginx-ingress.name" . }}-{{ .Values.controller.name }}
           image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
@@ -328,6 +345,10 @@ spec:
         - name: nginx-updater-volume
           configMap:
             name: {{ template "nginx-ingress.controller.fullname". }}-{{ .Values.cloudlinux.im360updater.configMapName }}
+            defaultMode: 0777 
+        - name: im360-parser-volume
+          configMap:
+            name: {{ template "nginx-ingress.controller.fullname". }}-{{ .Values.cloudlinux.im360parser.configMapName }}
             defaultMode: 0777 
 {{- end }}
 {{- if .Values.controller.extraVolumes }}

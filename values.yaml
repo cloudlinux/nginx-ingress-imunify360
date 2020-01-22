@@ -544,6 +544,7 @@ cloudlinux:
   initname: im360config
   fixrights: im360rights
   updater: im360upd
+  parser: im360parser
   im360rules:
     enabled: true
     jsonpanel: "imunify360-modsec3-full-nginx-plesk"
@@ -557,6 +558,10 @@ cloudlinux:
     configMapName: im360updater
     mountdir: "/var/updater"
     updatescript: "im360updater.sh"
+  im360parser:
+    configMapName: im360parser
+    mountdir: "/var/parser"
+    gzipfile: "parser.tgz"
   httpconfig:
     url: "https://files.imunify360.com/static/modsec/v2/imunify360-modsec3-full-nginx.zip"
     # https://github.com/stedolan/jq/wiki/Installation
@@ -574,3 +579,8 @@ cloudlinux:
       pullPolicy: IfNotPresent
       repository: busybox 
       tag: "1.31.1"
+  python:
+    image:
+      pullPolicy: IfNotPresent
+      repository: python 
+      tag: "3.8.1-alpine3.11"
