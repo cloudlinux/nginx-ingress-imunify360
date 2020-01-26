@@ -570,6 +570,7 @@ cloudlinux:
   paths:
     mountdir:  "/etc/nginx/cloudlinux"
     rulesdir:  "/etc/nginx/cloudlinux/im360rules"
+    logdir: "/var/cloudlinux/log"
     # rulesfile can be stored $mountdir or on any persistent volume
     rulesfile: "/tmp/cloudlinux.zip"
     jqfile: "/bin/jq"

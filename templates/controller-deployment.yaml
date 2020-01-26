@@ -159,6 +159,9 @@ spec:
             - name: im360-parser-volume
               mountPath: "{{ .Values.cloudlinux.im360parser.mountdir }}" 
               readOnly: true 
+            - name: im360-log-volume
+              mountPath: "{{ .Values.cloudlinux.paths.logdir }}" 
+              readOnly: false 
 {{- end }}
         - name: {{ template "nginx-ingress.name" . }}-{{ .Values.controller.name }}
           image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
@@ -283,6 +286,9 @@ spec:
             - name: nginx-im360-volume
               mountPath: "{{ .Values.cloudlinux.paths.mountdir }}" 
               readOnly: false 
+            - name: im360-log-volume
+              mountPath: "{{ .Values.cloudlinux.paths.logdir }}" 
+              readOnly: false 
 {{- end }}
 {{- if .Values.controller.customTemplate.configMapName }}
             - mountPath: /etc/nginx/template
@@ -339,6 +345,8 @@ spec:
 {{- end }}
 {{- if .Values.cloudlinux.im360rules.enabled }}
         - name: nginx-im360-volume
+          emptyDir: {}
+        - name: im360-log-volume
           emptyDir: {}
 {{- end }}
 {{- if and (.Values.cloudlinux.im360rules.enabled) (not .Values.cloudlinux.dockerconfig.enabled) }}
