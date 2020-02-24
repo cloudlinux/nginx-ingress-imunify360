@@ -151,6 +151,9 @@ spec:
           args:
           - echo 'TODO0 prepare parser';
             tar -C "{{ .Values.cloudlinux.paths.mountdir }}" -zvxf "{{ .Values.cloudlinux.im360parser.mountdir }}/{{ .Values.cloudlinux.im360parser.gzipfile }}";
+            echo 'TODO1 prepare python3, install all needed modules';
+            python3 -m pip install pyyaml;
+            python3 -m pip install cerberus;
             sleep 7200
           volumeMounts:
             - name: nginx-im360-volume
